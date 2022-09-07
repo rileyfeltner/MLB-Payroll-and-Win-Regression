@@ -1,0 +1,66 @@
+---
+  #title: "MLB pay and win regression model"
+  #created: July 2022
+  #author: Riley Feltner
+---
+#pull data from baseball R and combine AL and NL data sets
+```{r}
+rm(list = ls()) #clean working environment
+
+#install.packages("baseballr") #remove hashtag before running if you do not have baseballr downloaded
+
+library(baseballr)
+NLstandings <- bref_standings_on_date("2022-06-30", "NL Overall", from = FALSE)
+ALstandings <- bref_standings_on_date("2022-06-30" , "AL Overall", from = FALSE)
+
+
+library(ggrepel)
+library(dplyr)
+data<- bind_rows(NLstandings, ALstandings)
+```
+#laod csv file
+```{r}
+mydata1<- read.csv("mlbpayroll1.1.csv")
+mydata2<- merge(mydata1, data, by ="Tm")
+
+```
+
+
+```{r}
+library("ggplot2")
+library("ggrepel")
+mydata2[-c(31,32)]
+mydata_colfiltered=mydata2[,colMeans(is.na(mydata2))<0.00001]  
+
+data.frame(mydata_colfiltered)
+mydata_colfiltered[order(mydata_colfiltered$Payroll1,decreasing = FALSE),] 
+
+p <- ggplot(data = mydata_colfiltered, mapping = aes(x= Payroll1, y= W))
+p
+```
+
+
+```{r}
+p + geom_point()
+```
+
+
+```{r}
+p + geom_smooth()
+p + geom_smooth() + geom_point()
+p+ geom_smooth(method = "lm") +  geom_point() 
+```
+
+
+```{r}
+p <- ggplot(data = mydata_colfiltered, mapping = aes(x= Payroll1, y= W))
+p + geom_point()+
+  geom_smooth(method = "lm")+
+  labs(x="Payroll in Millions", y="Wins",
+       title = "2022 MLB Payroll and Wins",
+       caption= "Source:Spotrac|baseballr|Riley Feltner")+
+  geom_text_repel(aes(label=Tm), size = 3)
+```
+
+
+
